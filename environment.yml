@@ -172,4 +172,3 @@ dependencies:
   - xz=5.2.6=h57fd34a_0
   - zlib=1.2.13=h03a7124_4
   - zstd=1.5.2=h8128057_4
-prefix: /Users/bede/miniforge3/envs/agriculture
