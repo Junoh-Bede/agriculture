@@ -63,7 +63,6 @@ def get_building_info(db_path):
 
 
 def process_agriculture_loads(db_path, energy_type, multi_processing=True):
-    check_energy_type(energy_type)
     building_info = get_building_info(db_path)
     building_info['path'] = db_path
     data = list(building_info.transpose().to_dict())
@@ -73,13 +72,6 @@ def process_agriculture_loads(db_path, energy_type, multi_processing=True):
     else:
         for datum in data:
             calculate_agriculture_loads(datum)
-
-
-def check_energy_type(energy_type):
-    if energy_type in ['E', 'NG']:
-        return True
-    else:
-        raise NameError('It is not supported cooking energy type!')
 
 
 def main():
