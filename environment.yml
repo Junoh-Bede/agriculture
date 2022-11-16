@@ -1,4 +1,4 @@
-name: cooking
+name: agriculture
 channels:
   - conda-forge
 dependencies:
