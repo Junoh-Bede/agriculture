@@ -4,6 +4,7 @@ from datetime import datetime
 from multiprocessing import Pool, cpu_count
 
 
+# 동식물 관련시설 운영시간 계산
 def agricultural_hours(db_path):
     occupancy_file = f"{db_path}/inputs/technology/archetypes/use_types/AGRICULTURAL.csv"
     occupancy = pd.read_csv(occupancy_file, header=2)
@@ -15,6 +16,7 @@ def agricultural_hours(db_path):
     return total_hours, result
 
 
+# 운영시간에 따른 기기 가동 에너지 분배
 def fill_agriculture(row, usage, area, path, energy_per_sqm):
     total_hours, result = agricultural_hours(path)
     week_day = result['WEEKDAY']
@@ -37,18 +39,22 @@ def fill_agriculture(row, usage, area, path, energy_per_sqm):
         return 0
 
 
+# CEA 결과 파일 읽고 각각의 건물에 맞는 에너지값 계산 후 저장
 def calculate_agriculture_loads(item):
     path = item['path']
+    name = item['Name']
     area = item['AREA']
     usage = item['1ST_USE']
     energy_df = pd.read_csv('agriculture.csv')
     energy_df['result'] = energy_df['energy_per_animal'] * energy_df['animal_num'] / energy_df['floor_area_total']
     energy = sum(energy_df['result'])
-    data = pd.read_csv(path)
+    data_location = f"{path}/outputs/data/demand/{name}"
+    data = pd.read_csv(data_location)
     data['agricultural'] = data.apply(fill_agriculture, axis=1, args=(usage, area, path, energy))
-    data.to_csv(path)
+    data.to_csv(data_location)
 
 
+# CEA 입력값 확인 및 parsing
 def get_building_info(db_path):
     architecture = gpd.read_file(f'{db_path}/inputs/building-properties/architecture.dbf')
     architecture.drop(columns=['geometry'], inplace=True)
@@ -62,7 +68,8 @@ def get_building_info(db_path):
     return building
 
 
-def process_agriculture_loads(db_path, energy_type, multi_processing=True):
+# multiprocessing 여부에 따른 작업
+def process_agriculture_loads(db_path, multi_processing=True):
     building_info = get_building_info(db_path)
     building_info['path'] = db_path
     data = list(building_info.transpose().to_dict())
@@ -75,13 +82,12 @@ def process_agriculture_loads(db_path, energy_type, multi_processing=True):
 
 
 def main():
-    energy_type = input('Please input the energy type (NG or E): ')
     db_path = input("Please input CEA scenario path: ")
     multi = input("Are you going to run multiprocessing? (y/n) : ")
     if multi == 'y':
-        process_agriculture_loads(db_path, energy_type)
+        process_agriculture_loads(db_path)
     elif multi == 'n':
-        process_agriculture_loads(db_path, energy_type, multi_processing=False)
+        process_agriculture_loads(db_path, multi_processing=False)
 
 
 if __name__ == '__main__':
